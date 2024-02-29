@@ -1,5 +1,8 @@
 #include <LiquidCrystal_I2C.h>
 #include <Wire.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 #define BUTTON_COUNT 3
 #define BUTTON_PIN_START 12
@@ -7,34 +10,34 @@
 #define RED_LED_PIN 14
 
 LiquidCrystal_I2C lcdOne(0x27, 16, 2); // Initialize LCD object - Assuming 16x2 display
-
+bool micState = false;
 bool lcdOn = false; // Variable to track the state of the LCD
 bool gameStarted = false;
 int randomButton; // Variable to store the randomly selected button
 unsigned long gameStartTime; // Variable to store the time when the game started
 bool correctButtonPressed = false; // Flag to track if the correct button was pressed
+bool game3States = false;
 
 unsigned long lastDebounceTime = 0;
 unsigned long debounceDelay = 50;
 
 void setup() {
+  // Initialize random number generator with seed
+  randomSeed(analogRead(0));
+  
   // LCD setup
   lcdOne.init(); // Initialize the LCD with the I2C interface
 
-  // Digital inputs
+  //Digital Inputs
   pinMode(0, INPUT_PULLUP); // OFF/ON button
   pinMode(1, INPUT_PULLUP); // "New Game" button
 
-  // Digital outputs for LEDs
-  for (int i = 0; i < BUTTON_COUNT; i++) {
-    pinMode(BUTTON_PIN_START + i, INPUT_PULLUP);
-    pinMode(BUTTON_PIN_START + i + 2, OUTPUT);
-    digitalWrite(BUTTON_PIN_START + i + 2, LOW); // Ensure LEDs are initially off
-  }
+  //Success/failure LEDs
+  pinMode(18, OUTPUT);//Success led
+  pinMode(19, OUTPUT); //Failure led
 
-  // LED pins
-  pinMode(GREEN_LED_PIN, OUTPUT);
-  pinMode(RED_LED_PIN, OUTPUT);
+  //Mic input
+  pinMode(17, INPUT); //Read input from microphone (Digital)
 
 }
 
@@ -78,58 +81,92 @@ void loop() {
 
   //NEW GAME BUTTON//////////////////////////////// (later)
   if (gameStarted) {
+
     if (digitalRead(1) == LOW) {
       // Clear the LCD screen
       lcdOne.clear();
       lcdOne.print("Ready, Set, Go!");
-      startGame();
+
+      randomGame();
+
+      
+      //startGame();
     }
   }
+}
 
-  //Check if the game has started and enough time has passed
-  if (gameStarted && millis() - gameStartTime > 5000 && !correctButtonPressed) {
-    // Turn off the LED if the player didn't press the correct button within 5 seconds
-    digitalWrite(BUTTON_PIN_START + randomButton + 2, LOW);
+//Function for Sing it!
+bool singItCommand() {
+  if (digitalRead(17) == HIGH) {
+    return true; // Microphone input detected
+  } else {
+    return false; // No microphone input
   }
 }
 
-void startGame() {
-//   Serial.println("Game started");
-//   // Generate random LED pattern
-//   randomButton = random(BUTTON_COUNT); // Generate a random button to light up
-//   digitalWrite(BUTTON_PIN_START + randomButton + 2, HIGH); // Turn on the corresponding LED
-//   gameStartTime = millis(); // Record the start time of the game
 
-//   // Wait for player input
-//   unsigned long timeout = 5000; // Timeout duration (in milliseconds)
-//   unsigned long startTime = millis(); // Record the start time of waiting
+void randomGame() {
+  lcdOne.clear();
+  bool gameOver = false;
 
-//   while (millis() - startTime < timeout) {
-//     // Check for button press
-//     for (int i = 0; i < BUTTON_COUNT; i++) {
-//       if (digitalRead(BUTTON_PIN_START + i) == LOW) {
-//         if (i == randomButton) {
-//           correctButtonPressed = true; // Set flag if correct button is pressed
-//           flashLED(GREEN_LED_PIN); // Flash green LED
-//         } else {
-//           flashLED(RED_LED_PIN); // Flash red LED
-//         }
-//         break;
-//       }
-//     }
-//     if (correctButtonPressed) {
-//       break; // Exit the loop if the correct button was pressed
-//     }
-//   }
+  while (!gameOver) {
+    int randomNum = random(1, 4); // Generate a random number between 1 and 3
+    
+    // Print the game number on the LCD
+    lcdOne.setCursor(0, 0);
+    lcdOne.clear();
+    lcdOne.print("Game ");
+    lcdOne.print(randomNum);
+    
+    // Call the respective game function based on the random number
+    switch(randomNum) {
+      case 1:
+        // Call game function 1 and set gameOver based on game result
+        // gameOver = game1();
+        break;
+      case 2:
+        // Call game function 2 and set gameOver based on game result
+        // gameOver = game2();
+        break;
+      case 3:
+        // Call game function 3 and set gameOver based on game result
+        gameOver = game3();
+        break;
+      default:
+        // Handle unexpected case
+        break;
+    }
 
-//   // Reset flags and turn off the LED
-//   correctButtonPressed = false;
-//   digitalWrite(BUTTON_PIN_START + randomButton + 2, LOW);
-// }
+    delay(2000); // Add a delay before selecting the next game
+  }
 
-// void flashLED(int pin) {
-//   Serial.println("LED flashed");
-//   digitalWrite(pin, HIGH); // Turn on the LED
-//   delay(100); // Delay to keep the LED on
-//   digitalWrite(pin, LOW); // Turn off the LED
+  // Once the game loop exits, display a message or perform any necessary cleanup
+  lcdOne.clear();
+  lcdOne.print("Game Over!");
+  //Add score as well
 }
+
+//Play it!
+bool game1(){
+
+}
+
+//Whammy it!
+bool game2(){
+
+}
+
+//Sing it!
+bool game3() {
+  // put your main code here, to run repeatedly:
+  micState = singItCommand(); //Assign Boolean value according to function
+  if(micState == 1){ //Light LED based on success or failure
+    digitalWrite(12, HIGH);
+  }
+  else{
+    digitalWrite(12, LOW);
+  }
+  delay(1000); //Wait before accepting more input
+}
+ 
+
