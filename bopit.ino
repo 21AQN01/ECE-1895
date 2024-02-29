@@ -164,7 +164,7 @@ bool game3() {
     digitalWrite(12, HIGH);
   }
   else{
-    digitalWrite(12, LOW);
+    digitalWrite(13, HIGH);
   }
   delay(1000); //Wait before accepting more input
 }
