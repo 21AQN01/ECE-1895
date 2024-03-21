@@ -2,13 +2,14 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
-LiquidCrystal_I2C lcd(0x27, 16, 2);
-int playerScore = 0;
+LiquidCrystal_I2C lcd(0x27, 16, 2); //Initialize the LCD screen
+int playerScore = 0; //Variable to keep track of the user's score
 bool isFailed = 0; //State to determine whether or not the player has successfully completed an action
 
-//Code does not yet include:
-//-Incorrect input resulting in a failure
-//-Time running out resulting in a failure
+//CODE DOES NOT YET INCLUDE:
+//Incorrect input resulting in a failure
+//Time running out resulting in a failure
+//Debouncing
 
 void setup() {
   //Initialize random number seed:
@@ -19,12 +20,11 @@ void setup() {
 
   //Initialize input pins:
   pinMode(8, INPUT); //Pin for reading digital microphone input
-  pinMode(9, INPUT); //Pin for beginning a new game
-  pinMode(A0, INPUT); //Pin for ending a game
+  pinMode(3, INPUT); //Pin for beginning a new game
 
   pinMode(0, INPUT); //Red Play-It! button input
   pinMode(1, INPUT); //Yellow Play-It! button input
-  pinMode(10, INPUT); //Green Play-It! button input
+  pinMode(A0, INPUT); //Green Play-It! button input
 
   //Initialize output pins:
   pinMode(2, OUTPUT); //Yellow Play-It! light output
@@ -36,27 +36,30 @@ void setup() {
   pinMode(A2, OUTPUT); //Incorrect input indication
 }
 
+//Repeating function:
 void loop() {
-  if(digitalRead(9) == HIGH){ //If the reset button is pressed (Pin #9):
+  if(digitalRead(3) == HIGH){ //If the reset button is pressed (Pin 9):
     beginGame(); //Call the function to begin a new game
   }
 }
 
+//Function to display LCD text formatted correctly:
 void displayLCDText(String text){
-  lcd.clear();
+  lcd.clear(); //
   lcd.setCursor(0, 0);
   lcd.print(text);
   //Could add more functionality here in order to center the displayed text, cause it to scroll, etc.
 }
 
+//Function that is called when the game is ended:
 void endGame(){
-  isFailed = 1;
-  digitalWrite(2, LOW);
+  isFailed = 1; //Set the isFailed variable to 1, indicating that the game has ended
+  digitalWrite(2, LOW); //Set all LEDs in the Play-It! command OFF
   digitalWrite(5, LOW);
   digitalWrite(6, LOW);
 
-  displayLCDText("Score: " + String(playerScore));
-  for(int i=0; i<3; i++){
+  displayLCDText("Score: " + String(playerScore)); //Display the current score at the end of the game
+  for(int i=0; i<3; i++){ //Have the failed LED and the score flash several times
     displayLCDText("Score: " + String(playerScore));
     digitalWrite(A2, HIGH);
     delay(1000);
@@ -64,16 +67,18 @@ void endGame(){
     digitalWrite(A2, LOW);
     delay(1000);
   }
-  displayLCDText("Game Over!");
+  displayLCDText("Game Over!"); //Display a "Game Over!" message on the LCD screen
   delay(4000);
   lcd.clear();
 }
 
+//Function called when a new game has began:
 void beginGame(){
-  isFailed = 0;
-  lcd.clear();
+  isFailed = 0; //The game has not ended yet
+  lcd.clear(); //Clear any text that may be remaining on the LCD screen
   playerScore = 0; //Reset the player's score upon beginning each new game
 
+  //Introductory message:
   displayLCDText("New Game!");
   delay(1000);
   displayLCDText("3");
@@ -85,8 +90,7 @@ void beginGame(){
   displayLCDText("GO!");
   delay(1000);
   displayLCDText("Score: " + String(playerScore)); //Line to display the current score of the player
-  //Above line should be used after any change to the score is made, or the game has finished
-  while(isFailed == 0){
+  while(isFailed == 0){ //Enter a loop which randomly generates a command to tell the user:
     int pickCommand = random(4);
     if(pickCommand == 1){
       singIt();
@@ -100,10 +104,11 @@ void beginGame(){
   }
 }
 
+//Function for "Sing-It!" command:
 void singIt(){
-  displayLCDText("Sing-It!");
-  while(1){
-    if(digitalRead(8) == HIGH){
+  displayLCDText("Sing-It!"); //Display the command on the LCD screen
+  while(1){ //Enter a loop while waiting for input
+    if(digitalRead(8) == HIGH){ //If input is read from the microphone, increment the score, flash the pass LED and move to the next command
       playerScore+=1;
       displayLCDText("Score: " + String(playerScore)); //Line to display the current score of the player
       digitalWrite(A1, HIGH);
@@ -113,7 +118,7 @@ void singIt(){
       break;
     }
 
-    if(digitalRead(9) == HIGH  || digitalRead(0) == HIGH || digitalRead(1) == HIGH || digitalRead(10) == HIGH){
+    if(digitalRead(3) == HIGH){ //If the reset button is pressed, the game is exited
       endGame();
       break;
     }
@@ -122,15 +127,15 @@ void singIt(){
 }
 
 void whammyIt(){
-  displayLCDText("Whammy-It!");
+  displayLCDText("Whammy-It!"); //Display the command on the LCD screen
   int initialRead = analogRead(A3); //Initial analog reading of the potentiometer
-  int voltageDiff = initialRead + 5; //Initial tone of the piezo buzzer
-  tone(7, voltageDiff);
+  int voltageDiff = initialRead + 5; //Initial tone of the Piezo buzzer
+  tone(7, voltageDiff); //Play an initial tone from the Piezo buzzer
   delay(500);
 
   while(1){
-    int currentRead = analogRead(A3);
-    if((currentRead - initialRead) >= 200){
+    int currentRead = analogRead(A3); //Wait for the potentiometer's value to be changed significantly
+    if((currentRead - initialRead) >= 200){ //If it is moved in either direction, the action is passed, score is incremented, and the new tone plays
       voltageDiff += (currentRead - initialRead);
       tone(7, voltageDiff);
 
@@ -143,7 +148,7 @@ void whammyIt(){
       noTone(7);
       break;
     }
-    else if((initialRead - currentRead >= 200)){
+    else if((initialRead - currentRead >= 200)){ //Here so the potentiometer could be turned either way
       voltageDiff += (initialRead - currentRead);
       tone(7, voltageDiff);
       
@@ -157,7 +162,7 @@ void whammyIt(){
       break;
     }
 
-    if(digitalRead(9) == HIGH || digitalRead(0) == HIGH || digitalRead(1) == HIGH || digitalRead(10) == HIGH){
+    if(digitalRead(3) == HIGH){ //Reset button is pressed and game has ended
       noTone(7);
       endGame();
       break;
@@ -166,7 +171,7 @@ void whammyIt(){
   //Must incorporate timer componant
 }
 
-void playIt(){
+void playIt(){  //Display the command on the LCD screen
   displayLCDText("Play-It!");
   delay(1000);
   int exitFlag = 0;
@@ -182,7 +187,7 @@ void playIt(){
       prevButton = 1;
       digitalWrite(5, HIGH);
       while(1){
-        if(digitalRead(10) == HIGH){
+        if(digitalRead(A0) == HIGH){
           buttonsPressed += 1;
           digitalWrite(5, LOW);
           tone(7, 440);
@@ -191,7 +196,7 @@ void playIt(){
           break;
         }
 
-        if(digitalRead(9) == HIGH){
+        if(digitalRead(3) == HIGH){
           endGame();
           exitFlag = 1;
           break;
@@ -214,7 +219,7 @@ void playIt(){
           break;
         }
 
-        if(digitalRead(9) == HIGH){
+        if(digitalRead(3) == HIGH){
           endGame();
           exitFlag = 1;
           break;
@@ -237,13 +242,14 @@ void playIt(){
           break;
         }
 
-        if(digitalRead(9) == HIGH){
+        if(digitalRead(3) == HIGH){
           endGame();
           exitFlag = 1;
           break;
         }
       }
     }
+
     if(exitFlag ==1){
       break;
     }
