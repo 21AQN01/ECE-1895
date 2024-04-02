@@ -9,7 +9,7 @@ bool isFailed = false; //State to determine whether or not the player has succes
 unsigned long actionStartTime; // Time when the current action started
 const long actionDuration = 7000; // Maximum duration for each action in milliseconds
 
-SoftwareSerial mySoftwareSerial(10, 9); // RX, TX for DF player
+SoftwareSerial mySoftwareSerial(9, 10); // RX, TX for DF player
 DFRobotDFPlayerMini myDFPlayer; //Initalize variable for df player
 
 void setup() {
