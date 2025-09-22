@@ -2,6 +2,7 @@
 # Tune-It! / Bop-It Guitar
 
 **Tune-It!** is a rhythm-based interactive game inspired by Guitar Hero, designed to test players’ reflexes, timing, and accuracy. Players follow game prompts using physical inputs like buttons, a whammy bar, and a microphone, while receiving visual and audio feedback.
+
 <img width="563" height="750" alt="image" src="https://github.com/user-attachments/assets/ef62361b-3b82-4c63-9cea-3af120181a73" />
 
 ---
