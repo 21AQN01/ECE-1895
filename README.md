@@ -155,7 +155,7 @@ The guitar enclosure was designed in CAD and fabricated using a combination of *
 ## How to Play
 
 1. Connect all components according to the hardware table above.  
-2. Upload `BopIt_Final.ino` to an Arduino board.  
+2. Upload `bopit_final.ino` to an Arduino board.  
 3. Press **start/reset** to begin the game.  
 4. Follow LCD prompts and respond using buttons, potentiometer, or microphone.  
 5. Score points and enjoy!
